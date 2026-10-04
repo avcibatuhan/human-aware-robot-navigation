@@ -3,10 +3,10 @@
 import json
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import numpy as np
 
-from human_evaluation.bag_reader import BagData, read_bag
 from human_evaluation.metrics import (
     distance_stats,
     mean_and_std,
@@ -15,6 +15,9 @@ from human_evaluation.metrics import (
     robot_positions_in_map,
 )
 from human_evaluation.validity import missing_topics
+
+if TYPE_CHECKING:
+    from human_evaluation.bag_reader import BagData
 
 # metric name -> (label, unit)
 METRICS = {
@@ -61,7 +64,7 @@ def within(times, window):
     return (times >= window[0]) & (times <= window[1])
 
 
-def compute_metrics(data: BagData, window=None) -> dict:
+def compute_metrics(data: "BagData", window=None) -> dict:
     """The section 3.7 metrics, restricted to ``window = (start, end)`` if given."""
     metrics = {}
 
@@ -107,6 +110,9 @@ def analyse_trial(trial_dir: Path) -> BagResult:
     if not (bag_dir / "metadata.yaml").exists():
         result.exclusion_reason = "no bag recorded"
         return result
+    # Imported here so the pairing and metric code works without ``rosbags``.
+    from human_evaluation.bag_reader import read_bag
+
     try:
         data = read_bag(bag_dir)
     except Exception as error:  # a truncated or corrupt bag must be reported, not crash the run
