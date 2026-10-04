@@ -16,6 +16,7 @@
   <exec_depend>turtlebot3_gazebo</exec_depend>
   <exec_depend>slam_toolbox</exec_depend>
   <exec_depend>nav2_map_server</exec_depend>
+  <exec_depend>human_detection</exec_depend>
 
   <test_depend>python3-pytest</test_depend>
 
