@@ -17,5 +17,13 @@ setup(
     description="Live and offline evaluation of human tracking and human-aware navigation.",
     license="AGPL-3.0-only",
     extras_require={"test": ["pytest"]},
-    entry_points={"console_scripts": ["live_summary = human_evaluation.live_summary:main"]},
+    entry_points={
+        "console_scripts": [
+            "live_summary = human_evaluation.live_summary:main",
+            "run_goal = human_evaluation.run_goal:main",
+            "bag_summary = human_evaluation.bag_summary:main",
+            "compare_navigation = human_evaluation.compare_navigation:main",
+            "export_navigation_results = human_evaluation.export_navigation_results:main",
+        ]
+    },
 )
