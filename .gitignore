@@ -54,3 +54,6 @@ bags/
 
 # Claude Code local state
 .claude/
+
+# Agent instructions stay local
+CLAUDE.md
