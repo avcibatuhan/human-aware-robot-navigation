@@ -23,6 +23,36 @@ Visualization Manager:
         Depth: 1
         Durability Policy: Transient Local
         Reliability Policy: Reliable
+    - Class: rviz_default_plugins/Map
+      Name: Local costmap
+      Enabled: true
+      Alpha: 0.6
+      Color Scheme: costmap
+      Draw Behind: false
+      Topic:
+        Value: /local_costmap/costmap
+        Depth: 1
+        Durability Policy: Volatile
+        Reliability Policy: Reliable
+    - Class: rviz_default_plugins/Path
+      Name: Global plan
+      Enabled: true
+      Color: 40; 200; 60
+      Line Style: Lines
+      Topic:
+        Value: /plan
+    - Class: rviz_default_plugins/Path
+      Name: Local plan
+      Enabled: true
+      Color: 40; 120; 255
+      Line Style: Lines
+      Topic:
+        Value: /local_plan
+    - Class: rviz_default_plugins/MarkerArray
+      Name: Tracked humans
+      Enabled: true
+      Topic:
+        Value: /tracked_humans_markers
     - Class: rviz_default_plugins/RobotModel
       Name: RobotModel
       Enabled: true
@@ -64,6 +94,12 @@ Visualization Manager:
       Enabled: true
       Topic:
         Value: /human_camera/image_raw
+        Reliability Policy: Reliable
+    - Class: rviz_default_plugins/Image
+      Name: Tracked IDs (debug_image:=true)
+      Enabled: true
+      Topic:
+        Value: /tracked_humans/debug_image
         Reliability Policy: Reliable
     - Class: rviz_default_plugins/Image
       Name: Human camera (depth)
