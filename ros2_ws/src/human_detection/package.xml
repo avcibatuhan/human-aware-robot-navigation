@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>human_detection</name>
+  <version>0.1.0</version>
+  <description>YOLOv8 person detection on the robot's RGB camera.</description>
+  <maintainer email="avcibatuhan26@gmail.com">Batuhan Avcı</maintainer>
+  <license>AGPL-3.0-only</license>
+
+  <!-- ultralytics is not a ROS package: it comes from requirements.txt -->
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>cv_bridge</exec_depend>
+  <exec_depend>human_interfaces</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>python3-opencv</exec_depend>
+
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

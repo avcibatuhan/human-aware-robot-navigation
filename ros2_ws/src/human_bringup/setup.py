@@ -38,6 +38,6 @@ setup(
     description="Simulation world, robot model, launch files and parameters "
     "for human-aware navigation.",
     license="AGPL-3.0-only",
-    tests_require=["pytest"],
+    extras_require={"test": ["pytest"]},
     entry_points={"console_scripts": []},
 )
