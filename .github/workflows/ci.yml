@@ -45,7 +45,7 @@ jobs:
           python-version: "3.12"
 
       - name: Install tools
-        run: pip install ruff pytest numpy
+        run: pip install ruff pytest numpy pyyaml
 
       - name: Safety check
         run: scripts/safety_check.sh

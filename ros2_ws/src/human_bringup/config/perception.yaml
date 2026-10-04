@@ -6,8 +6,53 @@ yolo_node:
     weights_dir: ~/.cache/human_detection
     confidence_threshold: 0.5
     device: cpu
+    torch_threads: 4               # CPU threads for inference (0 = torch default)
     image_topic: /human_camera/image_raw
     detections_topic: /human_detections
     publish_debug_image: false
     debug_image_topic: /human_detections/debug_image
     stats_period: 5.0
+
+deepsort_node:
+  ros__parameters:
+    use_sim_time: true
+    max_age: 30
+    n_init: 3
+    embedder_gpu: false
+    torch_threads: 2               # CPU threads for the appearance embedder
+    publish_coasting_tracks: false   # only tracks matched to a detection in this frame
+    detections_topic: /human_detections
+    image_topic: /human_camera/image_raw
+    tracks_topic: /tracked_humans
+    sync_slop: 0.02
+    publish_debug_image: false
+    debug_image_topic: /tracked_humans/debug_image
+    stats_period: 5.0
+
+human_localizer:
+  ros__parameters:
+    use_sim_time: true
+    tracks_topic: /tracked_humans
+    depth_topic: /human_camera/depth/image_raw
+    camera_info_topic: /human_camera/camera_info
+    output_topic: /tracked_humans_3d
+    depth_window_half_size: 5      # median over an 11 x 11 px window at the box centre
+    min_depth: 0.5
+    max_depth: 10.0
+    sync_slop: 0.02
+
+human_frame_transformer:
+  ros__parameters:
+    use_sim_time: true
+    input_topic: /tracked_humans_3d
+    output_topic: /tracked_humans_map
+    target_frame: map
+    tf_timeout: 0.2                # s to wait for the transform at the message stamp
+    fallback_fixed_frame: odom     # then: camera pose at the stamp + latest map -> odom
+    max_position_jump: 0.5         # m between consecutive accepted positions
+    jump_reset_after: 1.0          # s without an accepted position before re-acquiring
+    velocity_smoothing: 0.4        # weight of the newest finite difference
+    velocity_max_gap: 1.0
+    forget_after: 10.0
+    publish_markers: true
+    markers_topic: /tracked_humans_markers
