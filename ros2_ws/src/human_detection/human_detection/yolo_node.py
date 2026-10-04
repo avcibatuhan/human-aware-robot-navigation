@@ -33,6 +33,7 @@ class YoloNode(Node):
         self.declare_parameter("weights_dir", "~/.cache/human_detection")
         self.declare_parameter("confidence_threshold", 0.5)
         self.declare_parameter("device", "cpu")
+        self.declare_parameter("torch_threads", 0)
         self.declare_parameter("image_topic", "/human_camera/image_raw")
         self.declare_parameter("detections_topic", "/human_detections")
         self.declare_parameter("publish_debug_image", False)
@@ -44,6 +45,8 @@ class YoloNode(Node):
         )
         # Imported here so the module can be imported without ultralytics.
         os.environ.setdefault("YOLO_CONFIG_DIR", str(Path(weights).parent))
+        import numpy as np
+        import torch
         from ultralytics import YOLO
 
         self.get_logger().info(f"loading {weights} (downloaded on first run)")
@@ -52,6 +55,13 @@ class YoloNode(Node):
             confidence_threshold=self.get_parameter("confidence_threshold").value,
             device=self.get_parameter("device").value,
         )
+        # Warm-up: the first inference builds the model and is slow. Ultralytics
+        # also sets torch's thread count on that first call, so our own limit
+        # has to come after it. Several torch processes each grabbing every
+        # core slow each other (and Nav2) down badly; 0 keeps the default.
+        self.detector.detect(np.zeros((480, 640, 3), dtype=np.uint8))
+        if self.get_parameter("torch_threads").value > 0:
+            torch.set_num_threads(self.get_parameter("torch_threads").value)
         self.bridge = CvBridge()
         self.frame_times = []
         self.stats_period = self.get_parameter("stats_period").value
