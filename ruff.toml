@@ -4,3 +4,12 @@ extend-exclude = ["build", "install", "log"]
 
 [lint]
 select = ["E", "F", "W", "I", "B", "UP"]
+
+[lint.isort]
+known-first-party = [
+    "human_bringup",
+    "human_detection",
+    "human_evaluation",
+    "human_interfaces",
+    "human_tracking",
+]

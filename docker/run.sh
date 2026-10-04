@@ -62,8 +62,18 @@ if [[ -n "${WAYLAND_DISPLAY:-}" && -S "${XDG_RUNTIME_DIR:-}/$WAYLAND_DISPLAY" ]]
   )
 fi
 
-# Hardware-accelerated rendering through the host's Mesa drivers.
-[[ -d /dev/dri ]] && ARGS+=(--device /dev/dri)
+# Hardware-accelerated rendering through the host's Mesa drivers. NVIDIA nodes
+# are skipped: without the NVIDIA userspace in the container Gazebo picks that
+# card first, fails to initialise it and the camera sensors render nothing.
+for node in /dev/dri/card* /dev/dri/renderD*; do
+  [[ -e "$node" ]] || continue
+  driver="$(basename "$(readlink -f "/sys/class/drm/$(basename "$node")/device/driver" 2>/dev/null)")"
+  [[ "$driver" == "nvidia" ]] && continue
+  ARGS+=(--device "$node")
+done
+
+# Gazebo Fuel downloads (human actor meshes) and GUI settings survive --rm.
+ARGS+=(-v human-aware-nav-gz:/root/.gz)
 
 if [[ -t 0 ]]; then
   ARGS+=(-it)
