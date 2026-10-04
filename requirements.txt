@@ -1,0 +1,27 @@
+# Installed into a venv created with --system-site-packages so rclpy and
+# cv_bridge from the ROS install stay visible.
+
+# CPU-only PyTorch wheels (no CUDA download).
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch
+torchvision
+
+# Perception
+ultralytics
+deep-sort-realtime
+
+# cv_bridge in Jazzy is built against NumPy 1.x
+numpy<2
+
+# Offline evaluation
+rosbags
+pandas
+matplotlib
+
+# Dev
+pytest
+ruff
+
+# colcon-core requires setuptools<80; ament_python builds run with the venv's
+# interpreter, so keep the venv's setuptools compatible.
+setuptools<80
