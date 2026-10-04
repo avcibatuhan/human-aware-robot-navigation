@@ -1,0 +1,56 @@
+# ROS 2 / colcon
+build/
+install/
+log/
+.colcon_install_layout
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+.venv/
+venv/
+
+# C++
+*.o
+*.so
+*.a
+compile_commands.json
+CMakeCache.txt
+CMakeFiles/
+cmake-build-*/
+
+# Model weights (downloaded on first run)
+*.pt
+*.onnx
+*.engine
+
+# Rosbags
+*.mcap
+*.db3
+bags/
+
+# Videos (only docs/demo.gif is committed)
+*.mp4
+*.avi
+*.mkv
+*.webm
+*.mov
+
+# The dissertation is never committed
+*.pdf
+
+# Editors / OS
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# Claude Code local state
+.claude/
