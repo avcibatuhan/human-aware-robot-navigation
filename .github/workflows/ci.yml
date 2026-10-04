@@ -45,7 +45,7 @@ jobs:
           python-version: "3.12"
 
       - name: Install tools
-        run: pip install ruff pytest numpy pyyaml
+        run: pip install ruff pytest numpy pyyaml rosbags pandas matplotlib
 
       - name: Safety check
         run: scripts/safety_check.sh
@@ -54,6 +54,4 @@ jobs:
         run: ruff check .
 
       - name: pytest
-        # Exit code 5 means "no tests collected", which is fine until the
-        # first ROS-free module lands.
-        run: pytest ros2_ws/src || [ $? -eq 5 ]
+        run: pytest ros2_ws/src
