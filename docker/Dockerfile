@@ -29,6 +29,9 @@ RUN python3 -m venv --system-site-packages /opt/venv \
 ENV TURTLEBOT3_MODEL=waffle
 ENV VIRTUAL_ENV=/opt/venv
 ENV PATH=/opt/venv/bin:$PATH
+# ROS entry points run with /usr/bin/python3, not the venv's interpreter, so
+# the venv's packages are also put on the module search path.
+ENV PYTHONPATH=/opt/venv/lib/python3.12/site-packages
 
 RUN echo 'source /opt/ros/jazzy/setup.bash' >> /etc/bash.bashrc \
     && echo '[ -f /ws/ros2_ws/install/setup.bash ] && source /ws/ros2_ws/install/setup.bash' >> /etc/bash.bashrc

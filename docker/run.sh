@@ -72,8 +72,9 @@ for node in /dev/dri/card* /dev/dri/renderD*; do
   ARGS+=(--device "$node")
 done
 
-# Gazebo Fuel downloads (human actor meshes) and GUI settings survive --rm.
-ARGS+=(-v human-aware-nav-gz:/root/.gz)
+# Gazebo Fuel downloads (human actor meshes), GUI settings and the YOLO weights
+# survive --rm.
+ARGS+=(-v human-aware-nav-gz:/root/.gz -v human-aware-nav-cache:/root/.cache)
 
 if [[ -t 0 ]]; then
   ARGS+=(-it)
