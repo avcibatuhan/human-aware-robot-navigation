@@ -1,0 +1,11 @@
+    <!-- Standing person, 0.9 m beside the straight line from start to goal. -->
+    <actor name="static_human">
+      <pose>-0.5 0.9 0 0 0 3.14159</pose>
+      <skin>
+        <filename>https://fuel.gazebosim.org/1.0/Mingfei/models/actor/tip/files/meshes/stand.dae</filename>
+        <scale>1.0</scale>
+      </skin>
+      <animation name="stand">
+        <filename>https://fuel.gazebosim.org/1.0/Mingfei/models/actor/tip/files/meshes/stand.dae</filename>
+      </animation>
+    </actor>
