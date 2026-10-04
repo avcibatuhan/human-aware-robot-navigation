@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  colcon:
+    name: colcon build + test (ROS 2 Jazzy)
+    runs-on: ubuntu-latest
+    container: ros:jazzy
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install dependencies
+        run: |
+          apt-get update
+          rosdep update
+          rosdep install --from-paths ros2_ws/src --ignore-src -r -y --rosdistro jazzy
+
+      - name: Build
+        shell: bash
+        working-directory: ros2_ws
+        run: |
+          source /opt/ros/jazzy/setup.bash
+          colcon build --event-handlers console_cohesion+
+
+      - name: Test
+        shell: bash
+        working-directory: ros2_ws
+        run: |
+          source /opt/ros/jazzy/setup.bash
+          colcon test --event-handlers console_cohesion+
+          colcon test-result --verbose
+
+  python:
+    name: ruff + pytest (ROS-free modules)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Install tools
+        run: pip install ruff pytest numpy
+
+      - name: ruff check
+        run: ruff check .
+
+      - name: pytest
+        # Exit code 5 means "no tests collected", which is fine until the
+        # first ROS-free module lands.
+        run: pytest ros2_ws/src || [ $? -eq 5 ]
