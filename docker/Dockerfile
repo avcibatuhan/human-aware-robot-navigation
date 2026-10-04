@@ -18,6 +18,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     python3-venv \
     python3-colcon-common-extensions \
     clang-format \
+    ros-jazzy-ament-cmake-clang-format \
     && rm -rf /var/lib/apt/lists/*
 
 # ultralytics and deep-sort-realtime are not ROS packages: install them in a

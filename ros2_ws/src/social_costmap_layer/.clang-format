@@ -1,0 +1,6 @@
+---
+BasedOnStyle: Google
+ColumnLimit: 100
+AccessModifierOffset: -2
+DerivePointerAlignment: false
+PointerAlignment: Middle

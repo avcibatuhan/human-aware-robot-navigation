@@ -1,0 +1,5 @@
+<library path="social_costmap_layer">
+  <class type="social_costmap_layer::SocialLayer" base_class_type="nav2_costmap_2d::Layer">
+    <description>Adds a Gaussian-like cost around tracked humans.</description>
+  </class>
+</library>
