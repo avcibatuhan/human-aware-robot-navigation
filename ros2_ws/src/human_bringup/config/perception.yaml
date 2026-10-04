@@ -47,7 +47,7 @@ human_frame_transformer:
     input_topic: /tracked_humans_3d
     output_topic: /tracked_humans_map
     target_frame: map
-    tf_timeout: 0.2                # s to wait for the transform at the message stamp
+    tf_timeout: 0.5                # s to wait (without blocking) for the transform at the stamp
     fallback_fixed_frame: odom     # then: camera pose at the stamp + latest map -> odom
     max_position_jump: 0.5         # m between consecutive accepted positions
     jump_reset_after: 1.0          # s without an accepted position before re-acquiring

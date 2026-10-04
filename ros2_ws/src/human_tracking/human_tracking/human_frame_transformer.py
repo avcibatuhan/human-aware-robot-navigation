@@ -1,6 +1,7 @@
 """ROS 2 node: 3D human positions in the camera frame -> map frame, with velocity."""
 
 import copy
+from collections import deque
 
 import rclpy
 from rclpy.duration import Duration
@@ -20,7 +21,8 @@ class HumanFrameTransformer(Node):
         self.declare_parameter("input_topic", "/tracked_humans_3d")
         self.declare_parameter("output_topic", "/tracked_humans_map")
         self.declare_parameter("target_frame", "map")
-        self.declare_parameter("tf_timeout", 0.2)
+        self.declare_parameter("tf_timeout", 0.5)
+        self.declare_parameter("poll_period", 0.02)
         self.declare_parameter("fallback_fixed_frame", "odom")
         self.declare_parameter("max_position_jump", 0.5)
         self.declare_parameter("jump_reset_after", 1.0)
@@ -32,7 +34,7 @@ class HumanFrameTransformer(Node):
 
         self.target_frame = self.get_parameter("target_frame").value
         self.fixed_frame = self.get_parameter("fallback_fixed_frame").value
-        self.tf_timeout = Duration(seconds=self.get_parameter("tf_timeout").value)
+        self.tf_timeout = self.get_parameter("tf_timeout").value
         self.forget_after = self.get_parameter("forget_after").value
         self.jump_filter = JumpFilter(
             max_jump=self.get_parameter("max_position_jump").value,
@@ -43,10 +45,14 @@ class HumanFrameTransformer(Node):
             max_gap=self.get_parameter("velocity_max_gap").value,
         )
 
-        # The listener spins in its own thread so the lookup below can wait
-        # for the transform without blocking TF reception.
+        # Messages wait in this queue until their transform is available. The
+        # lookups never block: a blocking wait in a callback competes with the
+        # TF listener for the interpreter, and once the listener falls behind
+        # every later lookup blocks too and it never catches up.
+        self.pending = deque(maxlen=50)
         self.tf_buffer = Buffer()
-        self.tf_listener = TransformListener(self.tf_buffer, self, spin_thread=True)
+        self.tf_listener = TransformListener(self.tf_buffer, self, spin_thread=False)
+        self.create_timer(self.get_parameter("poll_period").value, self.process_pending)
 
         self.publisher = self.create_publisher(
             TrackedHumanArray, self.get_parameter("output_topic").value, 10
@@ -60,42 +66,53 @@ class HumanFrameTransformer(Node):
             TrackedHumanArray, self.get_parameter("input_topic").value, self.on_humans, 10
         )
 
-    def lookup(self, source_frame: str, stamp: Time):
-        """Transform from ``source_frame`` at ``stamp`` into the target frame.
+    def on_humans(self, msg: TrackedHumanArray):
+        self.pending.append(msg)
+        self.process_pending()
 
-        First at the message timestamp. The localization transform (map ->
-        odom) is published at a low and irregular rate, so it is often not
-        yet available for a fresh camera frame; in that case the camera pose
-        is taken at the message timestamp in the odometry frame and combined
-        with the latest map -> odom, which changes only slowly.
+    def process_pending(self):
+        """Transform the queued messages, oldest first, as their transforms arrive."""
+        while self.pending:
+            msg = self.pending[0]
+            stamp = Time.from_msg(msg.header.stamp)
+            tf = self.lookup(msg.header.frame_id, stamp)
+            if tf is None:
+                waited = (self.get_clock().now() - stamp).nanoseconds * 1e-9
+                if waited <= self.tf_timeout:
+                    return  # keep waiting for the transform at the message timestamp
+                tf = self.lookup_with_latest_localization(msg.header.frame_id, stamp)
+            self.pending.popleft()
+            if tf is not None:
+                self.transform_and_publish(msg, tf)
+
+    def lookup(self, source_frame: str, stamp: Time):
+        """Transform from ``source_frame`` into the target frame at ``stamp``, or None."""
+        try:
+            return self.tf_buffer.lookup_transform(self.target_frame, source_frame, stamp).transform
+        except TransformException:
+            return None
+
+    def lookup_with_latest_localization(self, source_frame: str, stamp: Time):
+        """Fallback once ``tf_timeout`` has passed.
+
+        The localization transform (map -> odom) can be late; it changes only
+        slowly, so the camera pose is taken at the message timestamp in the
+        odometry frame and combined with the latest map -> odom.
         """
         try:
-            return self.tf_buffer.lookup_transform(
-                self.target_frame, source_frame, stamp, timeout=self.tf_timeout
-            ).transform
-        except TransformException as exact_error:
             if not self.fixed_frame:
-                self.warn_no_transform(source_frame, exact_error)
-                return None
-        try:
+                raise TransformException("no fallback_fixed_frame configured")
             return self.tf_buffer.lookup_transform_full(
                 self.target_frame, Time(), source_frame, stamp, self.fixed_frame
             ).transform
         except TransformException as error:
-            self.warn_no_transform(source_frame, error)
+            self.get_logger().warn(
+                f"no transform {source_frame} -> {self.target_frame}: {error}",
+                throttle_duration_sec=2.0,
+            )
             return None
 
-    def warn_no_transform(self, source_frame, error):
-        self.get_logger().warn(
-            f"no transform {source_frame} -> {self.target_frame}: {error}",
-            throttle_duration_sec=2.0,
-        )
-
-    def on_humans(self, msg: TrackedHumanArray):
-        tf = self.lookup(msg.header.frame_id, Time.from_msg(msg.header.stamp))
-        if tf is None:
-            return
-
+    def transform_and_publish(self, msg: TrackedHumanArray, tf):
         translation = (tf.translation.x, tf.translation.y, tf.translation.z)
         rotation = (tf.rotation.x, tf.rotation.y, tf.rotation.z, tf.rotation.w)
         stamp = Time.from_msg(msg.header.stamp).nanoseconds * 1e-9
