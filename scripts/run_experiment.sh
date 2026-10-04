@@ -37,6 +37,12 @@ TOPICS=(
   /human_detections /tracked_humans /tracked_humans_3d /tracked_humans_map
   /tf /tf_static /odom /cmd_vel /plan /local_plan
 )
+# DEMO=1 also records what scripts/make_demo_gif.py needs.
+NAV_ARGS=()
+if [[ "${DEMO:-0}" == "1" ]]; then
+  NAV_ARGS+=(debug_image:=true)
+  TOPICS+=(/tracked_humans/debug_image /local_costmap/costmap)
+fi
 HUMAN_TOPICS=(/human_detections /tracked_humans /tracked_humans_3d /tracked_humans_map)
 
 source /opt/ros/jazzy/setup.bash
@@ -75,7 +81,8 @@ PIDS+=($!)
 until ros2 topic list 2>/dev/null | grep -q /human_camera/image_raw; do sleep 2; done
 
 echo "[$MODE $TRIAL_ID] launching navigation ($MODE) and perception"
-setsid ros2 launch human_bringup navigation.launch.py mode:="$MODE" >"$LOG/navigation.log" 2>&1 &
+setsid ros2 launch human_bringup navigation.launch.py mode:="$MODE" "${NAV_ARGS[@]}" \
+  >"$LOG/navigation.log" 2>&1 &
 PIDS+=($!)
 
 echo "[$MODE $TRIAL_ID] waiting for the human topics"
